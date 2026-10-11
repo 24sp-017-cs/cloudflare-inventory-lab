@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS products (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  sku TEXT NOT NULL UNIQUE,
+  stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS stock_movements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_id INTEGER NOT NULL,
+  movement_type TEXT NOT NULL CHECK (movement_type IN ('receipt', 'delivery')),
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  note TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (product_id) REFERENCES products(id)
+);
