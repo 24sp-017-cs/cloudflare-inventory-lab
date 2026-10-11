@@ -49,11 +49,43 @@ th,td{text-align:left;padding:11px;border-bottom:1px solid #e5eaf0;font-size:.93
 const $ = id => document.getElementById(id);
 function message(text, bad=false){$('notice').innerHTML='';const d=document.createElement('div');d.className='notice'+(bad?' error':'');d.textContent=text;$('notice').appendChild(d);}
 async function api(path, options={}){const r=await fetch(path,{headers:{'Content-Type':'application/json'},...options});const data=await r.json().catch(()=>({error:'Unexpected server response'}));if(!r.ok)throw new Error(data.error||'Request failed');return data;}
-async function refresh(){
- const [p,m]=await Promise.all([api('/api/products'),api('/api/movements')]);
- $('products').innerHTML=p.length?p.map(x=>`<tr><td>${x.id}</td><td>${esc(x.name)}</td><td>${esc(x.sku)}</td><td class="stock">${x.stock}</td><td>${esc(x.created_at)}</td></tr>`).join(''):'<tr><td colspan="5">No products yet.</td></tr>';
- $('product').innerHTML='<option value="">Choose product</option>'+p.map(x=>`<option value="${x.id}">${esc(x.name)} (${esc(x.sku)}) — stock ${x.stock}</option>`).join('');
- $('movements').innerHTML=m.length?m.map(x=>`<tr><td>${esc(x.created_at)}</td><td>${esc(x.product_name)}</td><td>${x.movement_type}</td><td>${x.quantity}</td><td>${esc(x.note||'')}</td></tr>`).join(''):'<tr><td colspan="5">No movements yet.</td></tr>';
+
+async function refresh() {
+  const [p, m] = await Promise.all([
+    api('/api/products'),
+    api('/api/movements')
+  ]);
+
+  $('products').innerHTML = p.length
+    ? p.map(x =>
+        '<tr><td>' + x.id +
+        '</td><td>' + esc(x.name) +
+        '</td><td>' + esc(x.sku) +
+        '</td><td class="stock">' + x.stock +
+        '</td><td>' + esc(x.created_at) +
+        '</td></tr>'
+      ).join('')
+    : '<tr><td colspan="5">No products yet.</td></tr>';
+
+  $('product').innerHTML =
+    '<option value="">Choose product</option>' +
+    p.map(x =>
+      '<option value="' + x.id + '">' +
+      esc(x.name) + ' (' + esc(x.sku) +
+      ') — stock ' + x.stock +
+      '</option>'
+    ).join('');
+
+  $('movements').innerHTML = m.length
+    ? m.map(x =>
+        '<tr><td>' + esc(x.created_at) +
+        '</td><td>' + esc(x.product_name) +
+        '</td><td>' + x.movement_type +
+        '</td><td>' + x.quantity +
+        '</td><td>' + esc(x.note || '') +
+        '</td></tr>'
+      ).join('')
+    : '<tr><td colspan="5">No movements yet.</td></tr>';
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('productForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/products',{method:'POST',body:JSON.stringify({name:$('name').value.trim(),sku:$('sku').value.trim(),stock:Number($('stock').value)})});e.target.reset();$('stock').value=0;message('Product saved to the database.');await refresh();}catch(err){message(err.message,true);}});
